@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Music Player </title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #d8df7c, #e67a7a 60%);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .player {
+      width: 360px;
+      background: #181818;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 30px 60px rgba(243, 238, 238, 0.7);
+    }
+
+    .cover {
+      width: 100%;
+      height: 200px;
+      border-radius: 18px;
+      background-size: cover;
+      background-position: center;
+      margin-bottom: 18px;
+    }
+
+    .info {
+      text-align: center;
+    }
+
+    .info h2 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .info p {
+      font-size: 13px;
+      color: #aaa;
+      margin: 6px 0 14px;
+    }
+
+    .progress {
+      width: 100%;
+      height: 6px;
+      background: #333;
+      border-radius: 6px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #013815, #1ed760);
+    }
+
+    .time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #f5eeee;
+      margin-top: 6px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin: 20px 0 12px;
+    }
+
+    .btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #11afe4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      transition: 0.25s;
+    }
+
+    .btn:hover {
+      background: #eba016;
+      transform: scale(1.08);
+    }
+
+    .play {
+      width: 60px;
+      height: 60px;
+      font-size: 22px;
+      background: #9fb4d4;
+      color: #f31313;
+    }
+
+    .volume {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .volume input {
+      width: 100%;
+    }
+
+    .playlist {
+      margin-top: 16px;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+
+    .track {
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #eef7ee;
+    }
+
+    .track:hover,
+    .track.active {
+      background: #ecdc81;
+      color: #d41010;
+    }
+
+    audio { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="player">
+  <div class="cover" id="cover"></div>
+
+  <div class="info">
+    <h2 id="title"></h2>
+    <p id="artist"></p>
+  </div>
+
+  <div class="progress" id="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="time">
+    <span id="current">0:00</span>
+    <span id="duration">0:00</span>
+  </div>
+
+  <div class="controls">
+    <div class="btn" id="prev">⏮</div>
+    <div class="btn play" id="play">▶</div>
+    <div class="btn" id="next">⏭</div>
+  </div>
+
+  <div class="volume">
+    🔊 <input type="range" min="0" max="1" step="0.01" id="volume" />
+  </div>
+
+  <div class="playlist" id="playlist"></div>
+
+  <audio id="audio"></audio>
+</div>
+
+<script>
+const songs = [
+{
+  title: "M.S. Dhoni - The Untold Story",
+  artist: "Armaan Malik",
+  src: "Album/Phir Kabhi.mp3",
+  cover: "https://picsum.photos/400?2"
+},
+  {
+    title: " Shaadi Mein Zaroor",
+    artist: "Akanksha Sharma & Yasser Desai",
+    src: "Album/Jogi.. .mp3",
+    cover: "https://picsum.photos/400?1"
+  },
+  {
+    title: " Genius",
+    artist: "Atif Aslam",
+    src: "Album/Tera Fitoor.mp3",
+    cover: "https://picsum.photos/400?2"
+  },
+  {
+    title: " Laal Singh Chaddha",
+    artist: "Arijit Singh, Shilpa Rao",
+    src: "Album/Tere Hawaale.mp3",
+    cover: "https://picsum.photos/400?2"
+  },
+  
+  {
+    title: "Genius",
+    artist: "Arijit Singh",
+    src: "Album/Dil Meri Na Sune.mp3",
+    cover: "https://picsum.photos/400?3"
+  },
+  {
+    title: "M.S. Dhoni - The Untold Story",
+    artist: "Armaan Malik",
+    src: "Album/Jab Tak.mp3",
+    cover: "https://picsum.photos/400?2"
+  },
+   
+];
+
+let index = 0;
+const audio = document.getElementById("audio");
+const cover = document.getElementById("cover");
+const title = document.getElementById("title");
+const artist = document.getElementById("artist");
+const playBtn = document.getElementById("play");
+const progress = document.getElementById("progress");
+const bar = document.getElementById("progressBar");
+const current = document.getElementById("current");
+const duration = document.getElementById("duration");
+const volume = document.getElementById("volume");
+const playlist = document.getElementById("playlist");
+
+function loadSong(i) {
+  const song = songs[i];
+  audio.src = song.src;
+  cover.style.backgroundImage = `url(${song.cover})`;
+  title.textContent = song.title;
+  artist.textContent = song.artist;
+  document.querySelectorAll('.track').forEach(t => t.classList.remove('active'));
+  document.getElementById(`track-${i}`).classList.add('active');
+}
+
+songs.forEach((s, i) => {
+  const div = document.createElement('div');
+  div.className = 'track';
+  div.id = `track-${i}`;
+  div.textContent = `${s.title} – ${s.artist}`;
+  div.onclick = () => { index = i; loadSong(i); playSong(); };
+  playlist.appendChild(div);
+});
+
+function playSong() {
+  audio.play();
+  playBtn.textContent = '⏸';
+}
+
+function pauseSong() {
+  audio.pause();
+  playBtn.textContent = '▶';
+}
+
+playBtn.onclick = () => audio.paused ? playSong() : pauseSong();
+
+document.getElementById('next').onclick = () => { index = (index + 1) % songs.length; loadSong(index); playSong(); };
+document.getElementById('prev').onclick = () => { index = (index - 1 + songs.length) % songs.length; loadSong(index); playSong(); };
+
+audio.ontimeupdate = () => {
+  bar.style.width = (audio.currentTime / audio.duration) * 100 + '%';
+  current.textContent = format(audio.currentTime);
+  duration.textContent = format(audio.duration);
+};
+
+progress.onclick = e => audio.currentTime = (e.offsetX / progress.clientWidth) * audio.duration;
+volume.oninput = () => audio.volume = volume.value;
+
+audio.onended = () => document.getElementById('next').click();
+
+function format(t) {
+  if (!t) return '0:00';
+  const m = Math.floor(t / 60);
+  const s = Math.floor(t % 60).toString().padStart(2,'0');
+  return `${m}:${s}`;
+}
+
+loadSong(index);
+volume.value = 0.7;
+audio.volume = 0.7;
+</script>
+
+</body>
+</html>
